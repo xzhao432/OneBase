@@ -1,6 +1,8 @@
 #pragma once
+#include <vector>
 #include "onebase/execution/executors/abstract_executor.h"
 #include "onebase/execution/plans/plan_nodes.h"
+#include "onebase/storage/table/table_heap.h"
 
 namespace onebase {
 
@@ -13,6 +15,9 @@ class IndexScanExecutor : public AbstractExecutor {
 
  private:
   const IndexScanPlanNode *plan_;
+  TableInfo *table_info_{nullptr};
+  TableHeap::Iterator iter_{nullptr, RID(INVALID_PAGE_ID, 0)};
+  TableHeap::Iterator end_{nullptr, RID(INVALID_PAGE_ID, 0)};
 };
 
 }  // namespace onebase

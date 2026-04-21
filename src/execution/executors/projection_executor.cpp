@@ -8,14 +8,28 @@ ProjectionExecutor::ProjectionExecutor(ExecutorContext *exec_ctx, const Projecti
     : AbstractExecutor(exec_ctx), plan_(plan), child_executor_(std::move(child_executor)) {}
 
 void ProjectionExecutor::Init() {
-  // TODO(student): Initialize child executor
-  throw NotImplementedException("ProjectionExecutor::Init");
+  child_executor_->Init();
 }
 
 auto ProjectionExecutor::Next(Tuple *tuple, RID *rid) -> bool {
-  // TODO(student): Get next tuple from child, evaluate each expression in
-  // plan_->GetExpressions() against it, and build output tuple from the results.
-  throw NotImplementedException("ProjectionExecutor::Next");
+  Tuple child_tuple;
+  RID child_rid;
+  if (!child_executor_->Next(&child_tuple, &child_rid)) {
+    return false;
+  }
+
+  const auto &exprs = plan_->GetExpressions();
+  const auto &schema = child_executor_->GetOutputSchema();
+  std::vector<Value> values;
+  values.reserve(exprs.size());
+  for (const auto &expr : exprs) {
+    values.push_back(expr->Evaluate(&child_tuple, &schema));
+  }
+  *tuple = Tuple(std::move(values));
+  if (rid != nullptr) {
+    *rid = child_rid;
+  }
+  return true;
 }
 
 }  // namespace onebase

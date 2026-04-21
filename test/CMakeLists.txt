@@ -6,7 +6,16 @@ include(GoogleTest)
 macro(onebase_add_test TEST_NAME TEST_SOURCE)
   add_executable(${TEST_NAME} ${TEST_SOURCE})
   target_link_libraries(${TEST_NAME} PRIVATE onebase GTest::gtest_main)
-  gtest_discover_tests(${TEST_NAME})
+  # Avoid running test binaries during build (can hang/timeout in some envs).
+  # Discover tests at ctest runtime instead.
+  gtest_discover_tests(${TEST_NAME}
+    DISCOVERY_MODE PRE_TEST
+    DISCOVERY_TIMEOUT 60
+  )
+  # Also register an executable-level test so that commands like:
+  #   ctest -R lru_k_replacer_test
+  # can find and run the whole binary (course autograder-friendly).
+  add_test(NAME ${TEST_NAME} COMMAND $<TARGET_FILE:${TEST_NAME}>)
 endmacro()
 
 # Type tests
@@ -23,6 +32,10 @@ onebase_add_test(disk_manager_test storage/disk_manager_test.cpp)
 # B+ tree tests (Lab 2)
 onebase_add_test(b_plus_tree_insert_test storage/b_plus_tree_insert_test.cpp)
 onebase_add_test(b_plus_tree_delete_test storage/b_plus_tree_delete_test.cpp)
+onebase_add_test(b_plus_tree_internal_page_test storage/b_plus_tree_internal_page_test.cpp)
+onebase_add_test(b_plus_tree_leaf_page_test storage/b_plus_tree_leaf_page_test.cpp)
+onebase_add_test(b_plus_tree_iterator_test storage/b_plus_tree_iterator_test.cpp)
+onebase_add_test(b_plus_tree_test storage/b_plus_tree_test.cpp)
 
 # Execution tests (Lab 3)
 onebase_add_test(executor_test execution/executor_test.cpp)
@@ -37,7 +50,11 @@ macro(onebase_eval_test TEST_NAME TEST_SOURCE)
   add_executable(${TEST_NAME} ${TEST_SOURCE} eval/eval_main.cpp)
   target_link_libraries(${TEST_NAME} PRIVATE onebase GTest::gtest)
   target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-  gtest_discover_tests(${TEST_NAME})
+  gtest_discover_tests(${TEST_NAME}
+    DISCOVERY_MODE PRE_TEST
+    DISCOVERY_TIMEOUT 60
+  )
+  add_test(NAME ${TEST_NAME} COMMAND $<TARGET_FILE:${TEST_NAME}>)
 endmacro()
 
 onebase_eval_test(lab1_eval_test eval/lab1_eval_test.cpp)

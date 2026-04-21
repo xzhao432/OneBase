@@ -5,27 +5,24 @@
 
 namespace onebase {
 
-TEST(LockManagerTest, SharedLockThrows) {
+TEST(LockManagerTest, SharedLockBasic) {
   LockManager lock_mgr;
   Transaction txn(0);
   RID rid(0, 0);
 
-  EXPECT_THROW(lock_mgr.LockShared(&txn, rid), NotImplementedException);
+  EXPECT_TRUE(lock_mgr.LockShared(&txn, rid));
+  EXPECT_TRUE(txn.IsSharedLocked(rid));
+  EXPECT_TRUE(lock_mgr.Unlock(&txn, rid));
 }
 
-TEST(LockManagerTest, ExclusiveLockThrows) {
+TEST(LockManagerTest, ExclusiveLockBasic) {
   LockManager lock_mgr;
   Transaction txn(0);
   RID rid(0, 0);
 
-  EXPECT_THROW(lock_mgr.LockExclusive(&txn, rid), NotImplementedException);
+  EXPECT_TRUE(lock_mgr.LockExclusive(&txn, rid));
+  EXPECT_TRUE(txn.IsExclusiveLocked(rid));
+  EXPECT_TRUE(lock_mgr.Unlock(&txn, rid));
 }
-
-// Students: After implementing LockManager, add tests for:
-// - Shared lock compatibility (multiple shared locks on same rid)
-// - Exclusive lock exclusion (exclusive blocks shared and vice versa)
-// - Lock upgrade (shared -> exclusive)
-// - 2PL enforcement (no locks after SHRINKING state)
-// - Deadlock scenarios (if implementing deadlock detection)
 
 }  // namespace onebase

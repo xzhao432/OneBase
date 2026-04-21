@@ -6,34 +6,42 @@
 
 namespace onebase {
 
-TEST(BufferPoolManagerTest, NewPageThrows) {
+TEST(BufferPoolManagerTest, NewPageBasic) {
   const std::string db_name = "test_bpm.db";
   DiskManager disk_manager(db_name);
   BufferPoolManager bpm(10, &disk_manager);
 
   page_id_t page_id;
-  EXPECT_THROW(bpm.NewPage(&page_id), NotImplementedException);
+  auto *page = bpm.NewPage(&page_id);
+  ASSERT_NE(page, nullptr);
+  EXPECT_EQ(page->GetPageId(), page_id);
+  EXPECT_EQ(page->GetPinCount(), 1);
+
+  std::snprintf(page->GetData(), 64, "hello_bpm");
+  EXPECT_TRUE(bpm.UnpinPage(page_id, true));
 
   disk_manager.ShutDown();
   std::remove(db_name.c_str());
 }
 
-TEST(BufferPoolManagerTest, FetchPageThrows) {
+TEST(BufferPoolManagerTest, FetchPageBasic) {
   const std::string db_name = "test_bpm_fetch.db";
   DiskManager disk_manager(db_name);
   BufferPoolManager bpm(10, &disk_manager);
 
-  EXPECT_THROW(bpm.FetchPage(0), NotImplementedException);
+  page_id_t pid;
+  auto *page = bpm.NewPage(&pid);
+  ASSERT_NE(page, nullptr);
+  std::snprintf(page->GetData(), 64, "persist");
+  EXPECT_TRUE(bpm.UnpinPage(pid, true));
+
+  auto *fetched = bpm.FetchPage(pid);
+  ASSERT_NE(fetched, nullptr);
+  EXPECT_STREQ(fetched->GetData(), "persist");
+  EXPECT_TRUE(bpm.UnpinPage(pid, false));
 
   disk_manager.ShutDown();
   std::remove(db_name.c_str());
 }
-
-// Students: After implementing BPM, add tests for:
-// - NewPage/FetchPage/UnpinPage cycle
-// - Eviction when pool is full
-// - Dirty page flush on eviction
-// - DeletePage
-// - FlushPage/FlushAllPages
 
 }  // namespace onebase
