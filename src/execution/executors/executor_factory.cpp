@@ -78,9 +78,9 @@ auto ExecutorFactory::CreateExecutor(ExecutorContext *exec_ctx, const AbstractPl
     }
 
     case PlanType::PROJECTION: {
-      auto *projection_plan = dynamic_cast<const ProjectionPlanNode *>(plan.get());
-      auto child = CreateExecutor(exec_ctx, projection_plan->GetChildPlan());
-      return std::make_unique<ProjectionExecutor>(exec_ctx, projection_plan, std::move(child));
+      auto *proj_plan = dynamic_cast<const ProjectionPlanNode *>(plan.get());
+      auto child = CreateExecutor(exec_ctx, proj_plan->GetChildPlan());
+      return std::make_unique<ProjectionExecutor>(exec_ctx, proj_plan, std::move(child));
     }
 
     case PlanType::UTILITY:
